@@ -51,6 +51,15 @@ endfunc
 
 command! -nargs=? PreviewTag call s:PreviewTag(<f-args>)
 
+"----------------------------------------------------------------------
+" preview previous tag 
+"----------------------------------------------------------------------
+function! s:PreviewTagPrev(...)
+	let tagname = (a:0 > 0)? a:1 : expand('<cword>')
+	call preview#preview_tag_prev(tagname)
+endfunc
+
+command! -nargs=? PreviewTagPrev call s:PreviewTagPrev(<f-args>)
 
 "----------------------------------------------------------------------
 " preview signature

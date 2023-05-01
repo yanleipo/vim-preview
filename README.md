@@ -20,6 +20,7 @@ Plug 'skywind3000/vim-preview'
 | Command | Arguments | Description |
 |---------|-----------|-------------|
 | PreviewTag | `[tagname]` | Display the tag in the preview window circularly |
+| PreviewTagPrev | `[tagname]` | Display the tag in the preview window circularly in reverse order |
 | PreviewFile | `[+cmd]` `filename` | Display the file in the preview window |
 | PreviewClose | `N/A` | Close the preview window |
 | PreviewGoto | `command` | Open the previewing file in a non-preview window |
@@ -28,12 +29,13 @@ Plug 'skywind3000/vim-preview'
 | PreviewSignature | `[function name]` | Preview the function signature circularly in the command line |
 
 
-## PreviewTag
+## PreviewTag / PreviewTagPrev
  
 This command can display tag definition in the preview window circularly:
 
 ```VimL
 PreviewTag [tagname]
+PreviewTagPrev [tagname]
 ```
 
 When the first argument `tagname` is not provided, current word under cursor is chosen as the tag name.

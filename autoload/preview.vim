@@ -520,6 +520,95 @@ function! preview#preview_tag(tagname)
 	call preview#cmdmsg(text, 1)
 endfunc
 
+"----------------------------------------------------------------------
+" display previous matched tag in the preview window
+"----------------------------------------------------------------------
+function! preview#preview_tag_prev(tagname)
+	if &previewwindow
+		return 0
+	endif
+	let uid = preview#window_uid('%', '%')
+	let pid = preview#preview_check()
+	let opt = {"tagname":""}
+	let varname = 'preview_preview_tag_cache'
+	let reuse = 0
+	let index = 0
+	if pid > 0
+		let [l:tabnr, l:winnr] = preview#window_find(pid)
+		let saveopt = gettabwinvar(l:tabnr, l:winnr, varname)
+		if type(saveopt) == type({})
+			let l:tagname = get(saveopt, 'tagname', '')
+			if l:tagname == a:tagname
+				let opt = saveopt
+				let reuse = 1
+			endif
+		endif
+	endif
+	if reuse == 0
+		let opt.tagname = a:tagname
+		let opt.taglist = preview#tagfind(a:tagname)
+		let opt.index = 0
+		if len(opt.taglist) > 0 && pid > 0
+			call settabwinvar(l:tabnr, l:winnr, varname, opt)
+		endif
+	else
+		let opt.index -= 1
+		if opt.index < 0
+			let opt.index = len(opt.taglist) - 1
+		endif
+	endif
+	if len(opt.taglist) == 0 
+		call preview#errmsg('E257: preview: tag not find "'. a:tagname.'"')
+		return 1
+	endif
+	if opt.index >= len(opt.taglist)
+		call preview#errmsg('E257: preview: index error')
+		return 2
+	endif
+	let taginfo = opt.taglist[opt.index]
+	let filename = taginfo.filename
+	if !filereadable(filename)
+		call preview#errmsg('E484: Can not open file '.filename)
+		return 3
+	endif
+	if pid == 0
+		let pid = preview#preview_open()
+		let [l:tabnr, l:winnr] = preview#window_find(pid)
+	endif
+	call settabwinvar(l:tabnr, l:winnr, varname, opt)
+	call preview#window_goto_uid(uid)
+	call preview#window_saveview()
+	call preview#window_goto_tabwin(l:tabnr, l:winnr)
+	silent exec 'e! '.fnameescape(filename)
+	call preview#window_loadview()
+	if &previewwindow
+		match none
+	endif
+	normal! gg
+	if has_key(taginfo, 'line')
+		silent! exec "".taginfo.line
+	elseif has_key(taginfo, 'cmd')
+		silent! exec "1"
+		silent! exec escape(taginfo.cmd, '*')
+		silent! exec "nohl"
+		" unsilent echom taginfo.cmd
+	endif
+	if g:preview#highlight != ''
+		call search("$", "b")
+		call search(escape(a:tagname, '[\*~^'))
+		let cmd = 'match ' . g:preview#highlight
+		exe cmd. ' "\%' . line(".") . 'l\%' . col(".") . 'c\k*"'
+	endif
+	call preview#window_up(0)
+	call preview#window_goto_uid(uid)
+	let text = taginfo.name
+	let text.= ' ('.(opt.index + 1).'/'.len(opt.taglist).') '
+	let text.= filename
+	if has_key(taginfo, 'line')
+		let text .= ':'.taginfo.line
+	endif
+	call preview#cmdmsg(text, 1)
+endfunc
 
 "----------------------------------------------------------------------
 " display preview file
